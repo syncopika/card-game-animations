@@ -1,0 +1,7 @@
+exploring card animations with Unity
+
+TODO
+- make a deck class? easier to configure card stuff that way maybe
+- refactor card script
+- make cards clickable
+- have a demo

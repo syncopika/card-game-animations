@@ -41,53 +41,89 @@ public class GameScript : MonoBehaviour
                 int newX = offsetFromDeck;
                 int newY = 3 - (i * 2);
 
-                for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
+                for (int j = i * rowLength; j < Math.Min((i * rowLength) + rowLength, this.deck.Count); j++)
                 {
-                    newX += 2; // kinda need to know the width of a card??
-                    CardScript script = this.deck[j].GetComponent<CardScript>();
+                    newX += 2; // kinda need to know the width of a card to be able to space them properly?
+                    CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>(); // start from top of deck
                     script.setEndPosition(new Vector3(newX, newY, -2));
-                    script.toggleFlip(false);
+                    script.toggleFlip(true);
                 }
             }
-        }else if(configuration == "splayed")
+        }
+        else if(configuration == "rainbow")
+        {
+            // TODO: look at the arc that's formed for this. it doesn't seem symmetrical. adjust arc height maybe?
+            for (int i = 0; i < numRows; i++)
+            {
+                int offsetFromDeck = -6;
+                int newX = offsetFromDeck;
+
+                for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
+                {
+                    newX += 2;
+                    float newZ = this.deck[this.deck.Count - 1 - j].transform.position.z; // top-most card should end up at bottom of new stack, etc.
+                    CardScript script = this.deck[j].GetComponent<CardScript>();
+                    script.setEndPosition(new Vector3(6, 3, newZ));
+                    script.toggleFlip(true);
+                }
+            }
+        }
+        else if(configuration == "splayed")
         {
             for (int i = 0; i < numRows; i++)
             {
                 int offsetFromDeck = -6;
                 float newX = offsetFromDeck;
                 int newY = 3 - (int)(i * 1.2);
+                float rotAngle = (float)Math.PI / 4;
+
                 for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
                 {
                     newX += 2.2f;
-                    CardScript script = this.deck[j].GetComponent<CardScript>();
+                    CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>();
                     script.setEndPosition(new Vector3(newX, newY, -2));
 
-                    // we're taking advantage of the different rates of y-rotation and rotating about x
+                    // when flipping, we're taking advantage of the different rates of y-rotation and rotating about x
                     // as well to produce a varying skewed placement of each card about the z-axis.
-                    script.setXRotationAngle((float)Math.PI/3);
+                    script.setXRotationAngle(rotAngle);
 
                     script.toggleFlip(false);
+
+                    // if card flip not toggled, change the rotAngle for each card
+                    if (!script.isFlip())
+                    {
+                        rotAngle -= (float)(Math.PI / 14);
+                    }
                 }
             }
         }
         else if (configuration == "splayed-symmetrical")
         {
             // cards should be angled like so: / -> | -> \
-            // figure out max and min angles (about the z-axis) that the cards should be at
-            // how many for each row, how much to space out
-            // for each subsequent row, stack on preceding row? just slightly moving towards the center each row (so in each subsequent row the cards will look closer together)
+            float startAngle = (float) (Math.PI / 6); // start angle
+            float arcAngle = (float)Math.PI / 3; // 60 deg arc
+            float angleSlice = arcAngle / (rowLength-1); // the angle between each card
+
             for (int i = 0; i < numRows; i++)
             {
                 int offsetFromDeck = -6;
                 float newX = offsetFromDeck;
+
                 int newY = 3 - (int)(i * 1.2);
+
+                float currAngle = startAngle;
+
                 for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
                 {
                     newX += 2.2f;
-                    CardScript script = this.deck[j].GetComponent<CardScript>();
+                    CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>();
                     script.setEndPosition(new Vector3(newX, newY, -2));
 
-                    // TODO
+                    script.setXRotationAngle(currAngle);
+
+                    currAngle -= angleSlice;
+
+                    script.toggleFlip(false);
                 }
             }
         }
@@ -110,7 +146,7 @@ public class GameScript : MonoBehaviour
     {
         // create a deck of cards
         createDeck(15, new Vector3(-7, 3, -2));
-        setCardEndPositions("splayed");
+        setCardEndPositions("rows");
         StartCoroutine("placeCard");
     }
 
