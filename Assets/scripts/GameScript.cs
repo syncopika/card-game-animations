@@ -9,9 +9,12 @@ public class GameScript : MonoBehaviour
     public GameObject cardPrefab;
 
     private List<GameObject> deck = new List<GameObject>();
+    private Vector3 deckLocation;
 
     private void createDeck(int numCards, Vector3 deckLocation)
     {
+        this.deckLocation = deckLocation;
+
         for (int i = 0; i < numCards; i++)
         {
             // make sure the cards are stacked (so change the z-value for each card)
@@ -127,6 +130,29 @@ public class GameScript : MonoBehaviour
                 }
             }
         }
+        else if(configuration == "circle")
+        {
+            float angleSlice = (float)(360 / rowLength);
+            float currAngle = 0f;
+            float centerX = deckLocation.x + 6;
+            float centerY = deckLocation.y - 2;
+            // how about radius?
+            float radius = 4.5f;
+            for (int i = 0; i < numRows; i++)
+            {
+                for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
+                {
+                    CardScript script = this.deck[j].GetComponent<CardScript>();
+                    script.setEndPosition(new Vector3(centerX + radius * (float)Math.Cos(currAngle), centerY + radius * (float)Math.Sin(currAngle), -2));
+                    //script.setEndPosition(new Vector3(centerX, centerY, -2));
+
+                    script.setXRotationAngle(currAngle); // we should orient the cards so they point towards the center of the circle, not along the tangent which this does
+
+                    currAngle += angleSlice;
+                    //script.toggleFlip(false);
+                }
+            }
+        }
     }
 
     IEnumerator placeCard()
@@ -146,7 +172,7 @@ public class GameScript : MonoBehaviour
     {
         // create a deck of cards
         createDeck(15, new Vector3(-7, 3, -2));
-        setCardEndPositions("rows");
+        setCardEndPositions("circle");
         StartCoroutine("placeCard");
     }
 

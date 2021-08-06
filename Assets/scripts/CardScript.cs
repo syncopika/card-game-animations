@@ -99,6 +99,11 @@ public class CardScript : MonoBehaviour
         startPosition = new Vector3(start.x, start.y, start.z);
     }
 
+    public Vector3 getPosition()
+    {
+        return transform.position;
+    }
+
     public void setEndPosition(Vector3 end)
     {
         endPosition = end;
