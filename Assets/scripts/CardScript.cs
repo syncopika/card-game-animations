@@ -13,7 +13,7 @@ public class CardScript : MonoBehaviour
 
     private float speed = 9.0f;
     private float arcHeight = -0.7f;
-    private float xRotationAngle = 0.0f; // in radians
+    private float zRotationAngle = 0.0f; // in radians
 
     private bool isMoving = false;
     private bool isRotating = false;
@@ -29,7 +29,7 @@ public class CardScript : MonoBehaviour
     {
         if (isMoving)
         {
-            // since the cards start at different heights but they end up at the same height, we want a bit of an arc?
+            // since the cards start at different heights but they end up at the same height (and at a height potentially lower than the original starting height), we want a bit of an arc?
             // https://luminaryapps.com/blog/arcing-projectiles-in-unity/
             if (transform.position.x < endPosition.x)
             {
@@ -48,20 +48,30 @@ public class CardScript : MonoBehaviour
             }
         }
 
+        // big problem here: these rotations end once the cards have reached their end positions.
+        // therefore, the rotations end based on the distance from the deck and so some end early (causing a splayed appearance - you tricked yourself!)
         if (isRotating && doFlip)
         {
-            // TODO: fix this maybe?; we get different results between flipped and non-flipped when we want a splayed configuration. but then again,
-            // this is because we're kinda using a trick by rotating x and y to get z to also rotate. the xRotationAngle I'm providing is arbitrary and I have no idea what to
-            // excpect the z-rotation to look like. lol
+            // the card rotation will stop once the flip is complete
             if (transform.eulerAngles.y < 180)
             {
                 // flip the card across the y-axis (so it goes from face-up to face-down or vice-versa)
                 // we start at eulerAngles.y being 0 deg
-                float angle = Mathf.PI / (endPosition.x - startPosition.x); // each card has a different rate of rotation when being flipped based on distance from the deck
+                float angle = Mathf.PI / (endPosition.x - startPosition.x); // each card will have a different rate of rotation when being flipped based on distance from the deck
+
+                float xDistance = Math.Abs(endPosition.x - startPosition.x);
+                float distCovered = Math.Abs(transform.position.x - startPosition.x);
+                float angleSlice = (distCovered / xDistance) * zRotationAngle;
 
                 // by rotating about the x-axis when rotating about the y-axis we can affect the z-axis to get my desired effect. discovered this accidentally lol
                 // this might be helpful in understanding why: https://www.reddit.com/r/Unity3D/comments/k03d4s/why_transformrotatex_y_0_also_rotates_zaxis/
-                transform.Rotate(xRotationAngle, angle * speed, 0);
+
+                // handle y and z rotations separately
+                Vector3 currRotation = transform.eulerAngles;
+                currRotation.y += (angle * speed);
+                currRotation.z += angleSlice;
+                transform.eulerAngles = currRotation;
+
             }
             else
             {
@@ -73,17 +83,22 @@ public class CardScript : MonoBehaviour
 
         if(isRotating && !doFlip)
         {
-            float deg = (180 * xRotationAngle) / (float)Math.PI + 360; // add 360 to make sure deg is not negative so when we lerp we don't get weird spinning behavior
-
-            // kinda weird but this time since we're not rotating about y, we can just rotate about z.
+            // note that if we're not flipping, the cards will be splayed differently from when they are flipped because rotating about the y-axis affects the z-axis rotation as well.
             if (isMoving)
             {
-                //float xDistance = Math.Abs(endPosition.x - startPosition.x);
-                //float distCovered = Math.Abs(transform.position.x - startPosition.x);
+                float xDistance = Math.Abs(endPosition.x - startPosition.x);
+                float distCovered = Math.Abs(transform.position.x - startPosition.x);
+                float angleSlice = (distCovered / xDistance) * zRotationAngle;
 
-                // TODO: can we sync the z-rotation with the translation on the x-axis? problem is this part depends on isMoving, so
-                // the rotation might not be fully completed if the 3rd arg for the below lerp is too low. this whole section probably needs to be refactored.
-                transform.eulerAngles = Vector3.Lerp(transform.rotation.eulerAngles, new Vector3(0, 0, deg), 1);
+                if (angleSlice < zRotationAngle)
+                {
+                    //float deg = (180 * zRotationAngle) / (float)Math.PI + 360; // add 360 to make sure deg is not negative so when we lerp we don't get weird spinning behavior
+                    //transform.eulerAngles = Vector3.Lerp(transform.rotation.eulerAngles, new Vector3(0, 0, deg), 1);
+                    Vector3 currRotation = transform.eulerAngles;
+                    currRotation.z += angleSlice;
+                    Debug.Log(cardName + ": angle " + angleSlice + ", final rotation angle: " + zRotationAngle);
+                    transform.eulerAngles = currRotation;
+                }
             }
             else
             {
@@ -109,9 +124,9 @@ public class CardScript : MonoBehaviour
         endPosition = end;
     }
 
-    public void setXRotationAngle(float angle)
+    public void setZRotationAngle(float angle)
     {
-        xRotationAngle = angle;
+        zRotationAngle = angle;
     }
 
     public void toggleFlip(bool flip)
@@ -127,6 +142,11 @@ public class CardScript : MonoBehaviour
     public void setName(string name)
     {
         cardName = name;
+    }
+
+    public string getName()
+    {
+        return cardName;
     }
 
     public void placeCard()
