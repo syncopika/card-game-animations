@@ -15,7 +15,6 @@ public class CardScript : MonoBehaviour
     private float zRotationAngle = 0.0f; // in radians
 
     private bool isMoving = false;
-    private bool isRotating = false;
     private bool doFlip = false;
 
     // Start is called before the first frame update
@@ -39,6 +38,17 @@ public class CardScript : MonoBehaviour
                 float baseZ = Mathf.Lerp(transform.position.z, endPosition.z, (nextX - startPosition.x) / xDistance);
                 float arc = arcHeight * (nextX - startPosition.x) * (nextX - endPosition.x) / (-0.25f * xDistance * xDistance);
                 transform.position = new Vector3(nextX, nextY, baseZ + arc);
+
+                // by rotating about the x-axis when rotating about the y-axis we can affect the z-axis to get my desired effect. discovered this accidentally lol
+                // this might be helpful in understanding why: https://www.reddit.com/r/Unity3D/comments/k03d4s/why_transformrotatex_y_0_also_rotates_zaxis/
+                // but better to not mess with each axis individually and try quaternions instead
+                // https://forum.unity.com/threads/rotate-object-towards-objects-at-different-distances.732425/ the quaternion slerp bit is super helpful
+                
+                float distCovered = Math.Abs(transform.position.x - startPosition.x);
+
+                Quaternion initialRot = Quaternion.Euler(0f, 0f, 0f);
+                Quaternion endRot = doFlip ? Quaternion.Euler(0f, 180f, (zRotationAngle * 180 / Mathf.PI)) : Quaternion.Euler(0f, 0f, (zRotationAngle * 180 / Mathf.PI));
+                transform.rotation = Quaternion.Slerp(initialRot, endRot, distCovered / xDistance);
             }
             else
             {
@@ -46,48 +56,6 @@ public class CardScript : MonoBehaviour
                 isMoving = false;
             }
         }
-
-        if (isRotating && doFlip)
-        {
-            // the card rotation will stop once the flip is complete
-            if (transform.eulerAngles.y < 180)
-            {
-                float xDistance = Math.Abs(endPosition.x - startPosition.x);
-                float distCovered = Math.Abs(transform.position.x - startPosition.x);
-
-                // by rotating about the x-axis when rotating about the y-axis we can affect the z-axis to get my desired effect. discovered this accidentally lol
-                // this might be helpful in understanding why: https://www.reddit.com/r/Unity3D/comments/k03d4s/why_transformrotatex_y_0_also_rotates_zaxis/
-                // but better to not mess with each axis individually and try quaternions instead
-
-                Quaternion initialRot = Quaternion.Euler(0f, 0f, 0f);
-                Quaternion endRot = Quaternion.Euler(0f, -180f, (zRotationAngle * 180 / Mathf.PI));
-                transform.rotation = Quaternion.Slerp(initialRot, endRot, distCovered / xDistance);
-            }
-            else
-            {
-                isRotating = false;
-            }
-        }
-
-        if(isRotating && !doFlip)
-        {
-            if (isMoving)
-            {
-                float xDistance = Math.Abs(endPosition.x - startPosition.x);
-                float distCovered = Math.Abs(transform.position.x - startPosition.x);
-
-                // https://forum.unity.com/threads/rotate-object-towards-objects-at-different-distances.732425/ the quaternion slerp bit is super helpful
-                Quaternion initialRot = Quaternion.Euler(0f, 0f, 0f);
-                Quaternion endRot = Quaternion.Euler(0f, 0f, (zRotationAngle * 180 / Mathf.PI));
-                transform.rotation = Quaternion.Slerp(initialRot, endRot, distCovered/xDistance);
-                
-            }
-            else
-            {
-                isRotating = false;
-            }
-        }
-
     }
 
     public void setStartPosition(Vector3 start)
@@ -128,6 +96,5 @@ public class CardScript : MonoBehaviour
     public void placeCard()
     {
         isMoving = true;
-        isRotating = true;
     }
 }

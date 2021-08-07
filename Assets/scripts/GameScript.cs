@@ -13,6 +13,9 @@ public class GameScript : MonoBehaviour
     public int deckSize = 15; // num of cards total
     public int rowLength = 5; // num of cards for a row
     public bool flip = false; // do flip animation
+    public string configuration = "rows";
+
+    private string[] configOptions = new[] { "rows", "splayed", "splayed-symmetrical", "rainbow", "circle" };
 
     private void createDeck(int numCards, Vector3 deckLocation)
     {
@@ -157,7 +160,6 @@ public class GameScript : MonoBehaviour
                 currAngle += angleSlice;
 
                 // this one is tricky. it looks like the y rotation when flipping interferes a bit with the final z rotation.
-                //script.toggleFlip(true);
             }
         }
     }
@@ -179,7 +181,13 @@ public class GameScript : MonoBehaviour
     {
         // create a deck of cards
         createDeck(this.deckSize, new Vector3(-7, 4, -2));
-        setCardEndPositions("rows");
+
+        if(Array.IndexOf(this.configOptions, this.configuration) < 0)
+        {
+            this.configuration = "rows";
+        }
+
+        setCardEndPositions(this.configuration);
         setFlip(this.flip);
         StartCoroutine("placeCard");
     }

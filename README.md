@@ -7,4 +7,8 @@ placing cards in rows (noticed how they're getting flipped)
     
 placing cards in a splayed arrangement    
 ![placing cards in a splayed example](screenshots/flip-splayed.gif)    
-![placing cards in a splayed example 2](screenshots/symmetrical-splayed.gif)    
+    
+other arrangements!    
+![flipping stack of cards](screenshots/rainbow.gif)    
+    
+![circle arrangement](screenshots/circle.gif)    
