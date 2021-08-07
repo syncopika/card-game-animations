@@ -5,11 +5,14 @@ using UnityEngine;
 
 public class GameScript : MonoBehaviour
 {
-
     public GameObject cardPrefab;
 
     private List<GameObject> deck = new List<GameObject>();
     private Vector3 deckLocation;
+
+    public int deckSize = 15; // num of cards total
+    public int rowLength = 5; // num of cards for a row
+    public bool flip = false; // do flip animation
 
     private void createDeck(int numCards, Vector3 deckLocation)
     {
@@ -24,9 +27,24 @@ public class GameScript : MonoBehaviour
 
             card.AddComponent<CardScript>();
             card.GetComponent<CardScript>().setStartPosition(startPos);
-            card.GetComponent<CardScript>().setName("card" + i);
+            card.GetComponent<CardScript>().Name = "card" + i;
 
             this.deck.Add(card);
+        }
+    }
+
+    private void setFlip(bool flip)
+    {
+        foreach(GameObject card in this.deck){
+            CardScript script = card.GetComponent<CardScript>();
+            if (flip)
+            {
+                script.toggleFlip(true);
+            }
+            else
+            {
+                script.toggleFlip(false);
+            }
         }
     }
 
@@ -35,7 +53,7 @@ public class GameScript : MonoBehaviour
         // TODO: pass in an enum representing some kind of pattern for the cards to end up in?
         // default can be some m x n configuration? have different parameters?
 
-        int rowLength = 5; // place cards in rows of 5
+        int rowLength = this.rowLength; // place cards in rows of 5
         int numRows = (int)Math.Ceiling(this.deck.Count / (float)rowLength);
 
         if (configuration == "rows")
@@ -52,7 +70,6 @@ public class GameScript : MonoBehaviour
                     CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>(); // start from top of deck
 
                     script.setEndPosition(new Vector3(newX, newY, -2));
-                    script.toggleFlip(true);
                 }
             }
         }
@@ -68,7 +85,6 @@ public class GameScript : MonoBehaviour
                 float newZ = this.deck[this.deck.Count - 1 - i].transform.position.z; // top-most card should end up at bottom of new stack, etc.
                 CardScript script = this.deck[i].GetComponent<CardScript>();
                 script.setEndPosition(new Vector3(6, 3, newZ));
-                script.toggleFlip(true);
             }
         }
         else if(configuration == "splayed")
@@ -82,27 +98,14 @@ public class GameScript : MonoBehaviour
                 float newX = offsetFromDeck;
                 int newY = 3 - (int)(i * 1.2);
                 float rotAngle = (float)Math.PI / 4;
+                int count = 0;
 
                 for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
                 {
                     newX += 2.2f;
-
                     CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>();
                     script.setEndPosition(new Vector3(newX, newY, zPos - (i*zDelta)));
-
-                    // when flipping, the y and z rotations produce a nice varying skew for each card.
-                    // when not flipping, we manually adjust the final z rotation for each card.
-                    script.toggleFlip(false);
-
-                    if (script.isFlip())
-                    {
-                        script.setZRotationAngle(rotAngle);
-                    }
-                    else
-                    {
-                        //Debug.Log(script.getName() + " final rotation angle: " + (rotAngle));
-                        script.setZRotationAngle(rotAngle);
-                    }
+                    script.setZRotationAngle(rotAngle - 0.15f*count++);
                 }
             }
         }
@@ -127,15 +130,10 @@ public class GameScript : MonoBehaviour
                 for (int j = i * rowLength; j < Math.Min(i * rowLength + rowLength, this.deck.Count); j++)
                 {
                     newX += 2.2f;
-
                     CardScript script = this.deck[this.deck.Count - 1 - j].GetComponent<CardScript>();
                     script.setEndPosition(new Vector3(newX, newY, zPos - (i * zDelta)));
-
                     script.setZRotationAngle(currAngle);
-
                     currAngle -= angleSlice;
-
-                    script.toggleFlip(false);
                 }
             }
         }
@@ -143,9 +141,8 @@ public class GameScript : MonoBehaviour
         {
             float angleSlice = (float)(360 / rowLength);
             float currAngle = 0f;
-            float centerX = deckLocation.x + 6;
-            float centerY = deckLocation.y - 2;
-            // how about radius?
+            float centerX = deckLocation.x + 6; // these are arbitrary values. TODO: get the center coords of the screen?
+            float centerY = deckLocation.y - 3;
             float radius = 4.5f;
 
             // just use this.deck.count to iterate through the cards since we're not arranging in a row format here
@@ -158,6 +155,8 @@ public class GameScript : MonoBehaviour
                 script.setZRotationAngle(currAngle + Mathf.PI/2);
 
                 currAngle += angleSlice;
+
+                // this one is tricky. it looks like the y rotation when flipping interferes a bit with the final z rotation.
                 //script.toggleFlip(true);
             }
         }
@@ -179,8 +178,9 @@ public class GameScript : MonoBehaviour
     void Start()
     {
         // create a deck of cards
-        createDeck(15, new Vector3(-7, 3, -2));
-        setCardEndPositions("splayed");
+        createDeck(this.deckSize, new Vector3(-7, 4, -2));
+        setCardEndPositions("rows");
+        setFlip(this.flip);
         StartCoroutine("placeCard");
     }
 
