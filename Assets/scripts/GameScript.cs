@@ -142,7 +142,7 @@ public class GameScript : MonoBehaviour
         }
         else if(configuration == "circle")
         {
-            float angleSlice = (float)(360 / rowLength);
+            float angleSlice = (float)(360 / this.deck.Count);
             float currAngle = 0f;
             float centerX = deckLocation.x + 6; // these are arbitrary values. TODO: get the center coords of the screen?
             float centerY = deckLocation.y - 3;
@@ -152,14 +152,16 @@ public class GameScript : MonoBehaviour
             for (int i = this.deck.Count - 1; i >= 0; i--)
             {
                 CardScript script = this.deck[i].GetComponent<CardScript>();
-                script.setEndPosition(new Vector3(centerX + radius * (float)Math.Cos(currAngle), centerY + radius * (float)Math.Sin(currAngle), -2));
+
+                float x = radius * (float)Math.Cos(currAngle * (Math.PI / 180));
+                float y = radius * (float)Math.Sin(currAngle * (Math.PI / 180));
+
+                script.setEndPosition(new Vector3(centerX + x, centerY + y, -2));
 
                 // add 90 deg to orient the cards so they point towards the center of the circle
-                script.setZRotationAngle(currAngle + Mathf.PI/2);
+                script.setZRotationAngle((float)(currAngle*(Math.PI/180)) + Mathf.PI/2);
 
                 currAngle += angleSlice;
-
-                // this one is tricky. it looks like the y rotation when flipping interferes a bit with the final z rotation.
             }
         }
     }
