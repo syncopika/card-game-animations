@@ -5,10 +5,8 @@ using UnityEngine;
 
 public class CardScript : MonoBehaviour
 {
-    private string cardName = "card";
-
-    private Vector3 endPosition;
     private Vector3 startPosition;
+    private Vector3 endPosition;
 
     private float speed = 9.0f;
     private float arcHeight = -0.7f;
@@ -37,6 +35,7 @@ public class CardScript : MonoBehaviour
                 float nextY = Mathf.MoveTowards(transform.position.y, endPosition.y, speed * Time.deltaTime * (yDistance / xDistance));
                 float baseZ = Mathf.Lerp(transform.position.z, endPosition.z, (nextX - startPosition.x) / xDistance);
                 float arc = arcHeight * (nextX - startPosition.x) * (nextX - endPosition.x) / (-0.25f * xDistance * xDistance);
+
                 transform.position = new Vector3(nextX, nextY, baseZ + arc);
 
                 // by rotating about the x-axis when rotating about the y-axis we can affect the z-axis to get my desired effect. discovered this accidentally lol
@@ -47,7 +46,10 @@ public class CardScript : MonoBehaviour
                 float distCovered = Math.Abs(transform.position.x - startPosition.x);
 
                 Quaternion initialRot = Quaternion.Euler(0f, 0f, 0f);
+
+                // make sure to take into account flipping if needed
                 Quaternion endRot = doFlip ? Quaternion.Euler(0f, 180f, (zRotationAngle * 180 / Mathf.PI)) : Quaternion.Euler(0f, 0f, (zRotationAngle * 180 / Mathf.PI));
+
                 transform.rotation = Quaternion.Slerp(initialRot, endRot, distCovered / xDistance);
             }
             else
@@ -87,11 +89,7 @@ public class CardScript : MonoBehaviour
         doFlip = flip;
     }
 
-    public string Name
-    {
-        get { return cardName; }
-        set { cardName = value; }
-    }
+    public string Name { get; set; } = "card";
 
     public void placeCard()
     {
