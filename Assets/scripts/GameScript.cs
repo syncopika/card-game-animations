@@ -82,7 +82,7 @@ public class GameScript : MonoBehaviour
                 CardAnimations.makeRainbow(deck);
                 break;
             case configOptions.Splayed:
-                 CardAnimations.makeSplayed(numRows, rowLength, deck);
+                CardAnimations.makeSplayed(numRows, rowLength, deck);
                 break;
             case configOptions.SplayedSymmetrical:
                 CardAnimations.makeSplayedSymmetrical(numRows, rowLength, deck);
