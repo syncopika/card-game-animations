@@ -13,6 +13,7 @@ public class CardScript : MonoBehaviour
     private float zRotationAngle = 0.0f; // in radians
 
     private bool isMoving = false;
+    private bool flipOnce = false; // for a one-time flip triggered by clicking on this card
     private bool doFlip = false;
 
     // Start is called before the first frame update
@@ -58,6 +59,15 @@ public class CardScript : MonoBehaviour
                 isMoving = false;
             }
         }
+
+        if (flipOnce)
+        {
+            // TODO: get the card to flip
+            // which direction? 
+            // also the flip shouldn't just be a rotation (otherwise half of the card would clip through the plane since it's supposed to be face-down/up on the surface of the plane)
+            // maybe it'd be easier just to create some animation for the card in Blender and play the animation.
+            flipOnce = false;
+        }
     }
 
     public void setStartPosition(Vector3 start)
@@ -94,5 +104,15 @@ public class CardScript : MonoBehaviour
     public void placeCard()
     {
         isMoving = true;
+    }
+
+    public void doFlipOnce()
+    {
+        flipOnce = true;
+    }
+
+    public bool isStatic()
+    {
+        return !isMoving;
     }
 }
