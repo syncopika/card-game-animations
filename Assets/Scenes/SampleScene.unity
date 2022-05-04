@@ -385,10 +385,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 100000, guid: 8e355dbbb62d5c74ead79fe0fb2ac368, type: 3}
+  cam: {fileID: 0}
   deckSize: 15
   rowLength: 5
   flip: 0
-  configuration: circle
+  configuration: 4
 --- !u!4 &1855798849
 Transform:
   m_ObjectHideFlags: 0

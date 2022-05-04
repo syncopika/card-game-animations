@@ -1,5 +1,6 @@
 exploring card animations with Unity
 
 TODO
-- make cards clickable
+- flip cards on click
 - have a demo
+- look at all the TODOs in the code :)
