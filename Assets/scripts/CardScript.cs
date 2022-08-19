@@ -7,6 +7,8 @@ public class CardScript : MonoBehaviour
 {
     private Vector3 startPosition;
     private Vector3 endPosition;
+    private Quaternion lastRotation;
+    private Quaternion nextRotation;
 
     private float speed = 9.0f;
     private float arcHeight = -0.7f;
@@ -19,6 +21,7 @@ public class CardScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        lastRotation = transform.localRotation;
     }
 
     // Update is called once per frame
@@ -66,7 +69,9 @@ public class CardScript : MonoBehaviour
             // which direction? 
             // also the flip shouldn't just be a rotation (otherwise half of the card would clip through the plane since it's supposed to be face-down/up on the surface of the plane)
             // maybe it'd be easier just to create some animation for the card in Blender and play the animation.
-            flipOnce = false;
+
+            // rotate about local y axis - not currently working
+            transform.localRotation = Quaternion.Lerp(transform.localRotation, lastRotation * Quaternion.Euler(0, 180, 0), Time.deltaTime * 10f);
         }
     }
 

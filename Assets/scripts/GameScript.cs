@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameScript : MonoBehaviour
 {
@@ -10,14 +11,16 @@ public class GameScript : MonoBehaviour
 
     private List<GameObject> deck = new List<GameObject>();
     private Vector3 deckLocation;
+    private configOptions selectedAnimation;
 
     public int deckSize = 15; // num of cards total
     public int rowLength = 5; // num of cards for a row
-    public bool flip = false; // do flip animation
+
+    public Dropdown selectCardAnimation;
+    public Button playAnimation;
+    public Toggle toggleFlip;
 
     // TODO
-    // add 3d collider to each card
-    // allow user to click on card - if card !isMoving, flip the card
     // create an interface to allow playing each animation, maybe modify num cards, etc.
 
     public enum configOptions {
@@ -68,8 +71,6 @@ public class GameScript : MonoBehaviour
 
     private void setCardEndPositions(configOptions configuration)
     {
-        // TODO: each configuration logic should be broken out into its own function
-
         int rowLength = this.rowLength;
         int numRows = (int)Math.Ceiling(this.deck.Count / (float)rowLength);
 
@@ -122,20 +123,72 @@ public class GameScript : MonoBehaviour
                     //Debug.Log("is static: " + hit.transform.GetComponent<CardScript>().isStatic());
                     if (cardScript.isStatic())
                     {
-                        // TODO: flip the card
+                        // flip the card
+                        cardScript.doFlipOnce();
                     }
                 }
             }
         }
     }
 
+    private void dropdownChange(Dropdown change)
+    {
+        string currSelected = selectCardAnimation.options[change.value].text;
+        if (currSelected.Equals("circle"))
+        {
+            selectedAnimation = configOptions.Circle;
+        }
+        else if (currSelected.Equals("rows"))
+        {
+            selectedAnimation = configOptions.Rows;
+        }
+        else if (currSelected.Equals("splayed"))
+        {
+            selectedAnimation = configOptions.Splayed;
+        }
+        else if (currSelected.Equals("splayed-symmetrical"))
+        {
+            selectedAnimation = configOptions.SplayedSymmetrical;
+        }
+        else if (currSelected.Equals("rainbow"))
+        {
+            selectedAnimation = configOptions.Rainbow;
+        }
+    }
+
+    void clearDeck()
+    {
+        foreach (GameObject card in this.deck)
+        {
+            Destroy(card);
+        }
+        deck = new List<GameObject>();
+    }
+
+    void doCardAnimation()
+    {
+        clearDeck();
+        createDeck(this.deckSize, new Vector3(-7, 4, -2));
+        setCardEndPositions(selectedAnimation);
+        setFlip(toggleFlip.isOn); // if wanting to flip cards during animation
+        StartCoroutine("placeCard");
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        createDeck(this.deckSize, new Vector3(-7, 4, -2));
-        setCardEndPositions(configuration);
-        setFlip(this.flip);
-        StartCoroutine("placeCard");
+        // hook up events
+        selectCardAnimation.onValueChanged.AddListener(delegate
+        {
+            dropdownChange(selectCardAnimation);
+        });
+
+        playAnimation.onClick.AddListener(doCardAnimation);
+
+        toggleFlip.isOn = false;
+
+        selectedAnimation = configOptions.Circle;
+        doCardAnimation();
     }
 
     // Update is called once per frame
