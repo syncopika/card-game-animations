@@ -7,8 +7,8 @@ public class CardScript : MonoBehaviour
 {
     private Vector3 startPosition;
     private Vector3 endPosition;
-    private Quaternion lastRotation;
-    private Quaternion nextRotation;
+    private Quaternion endRotation = Quaternion.Euler(0f, 180f, 0f);
+    private Quaternion flippedRotation;
 
     private float speed = 9.0f;
     private float arcHeight = -0.7f;
@@ -21,7 +21,6 @@ public class CardScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        lastRotation = transform.localRotation;
     }
 
     // Update is called once per frame
@@ -46,15 +45,14 @@ public class CardScript : MonoBehaviour
                 // this might be helpful in understanding why: https://www.reddit.com/r/Unity3D/comments/k03d4s/why_transformrotatex_y_0_also_rotates_zaxis/
                 // but better to not mess with each axis individually and try quaternions instead
                 // https://forum.unity.com/threads/rotate-object-towards-objects-at-different-distances.732425/ the quaternion slerp bit is super helpful
-                
-                float distCovered = Math.Abs(transform.position.x - startPosition.x);
+                // https://forum.unity.com/threads/understanding-rotations-in-local-and-world-space-quaternions.153330/
 
-                Quaternion initialRot = Quaternion.Euler(0f, 0f, 0f);
+                float xDistCovered = Math.Abs(transform.position.x - startPosition.x);
 
                 // make sure to take into account flipping if needed
-                Quaternion endRot = doFlip ? Quaternion.Euler(0f, 180f, (zRotationAngle * 180 / Mathf.PI)) : Quaternion.Euler(0f, 0f, (zRotationAngle * 180 / Mathf.PI));
+                Quaternion endRot = doFlip ? endRotation : Quaternion.Euler(0f, 0f, (zRotationAngle * 180 / Mathf.PI));
 
-                transform.rotation = Quaternion.Slerp(initialRot, endRot, distCovered / xDistance);
+                transform.rotation = Quaternion.Slerp(Quaternion.Euler(0f, 0f, 0f), endRot, xDistCovered / xDistance);
             }
             else
             {
@@ -65,13 +63,8 @@ public class CardScript : MonoBehaviour
 
         if (flipOnce)
         {
-            // TODO: get the card to flip
-            // which direction? 
-            // also the flip shouldn't just be a rotation (otherwise half of the card would clip through the plane since it's supposed to be face-down/up on the surface of the plane)
-            // maybe it'd be easier just to create some animation for the card in Blender and play the animation.
-
-            // rotate about local y axis - not currently working
-            transform.localRotation = Quaternion.Lerp(transform.localRotation, lastRotation * Quaternion.Euler(0, 180, 0), Time.deltaTime * 10f);
+            // flip the card on click
+            transform.rotation = Quaternion.Lerp(transform.rotation, flippedRotation, Time.deltaTime * 10f);
         }
     }
 
@@ -94,9 +87,14 @@ public class CardScript : MonoBehaviour
         endPosition = end;
     }
 
+    // angle is in radians here
     public void setZRotationAngle(float angle)
     {
         zRotationAngle = angle;
+
+        // if flip
+        // roate about y, then rotate about z - have to do the operations backwards
+        endRotation = transform.rotation * Quaternion.Euler(0f, 0f, (angle * 180) / Mathf.PI) * Quaternion.Euler(0f, 180f, 0f);
     }
 
     public void toggleFlip(bool flip)
@@ -114,6 +112,8 @@ public class CardScript : MonoBehaviour
     public void doFlipOnce()
     {
         flipOnce = true;
+
+        flippedRotation = transform.rotation * Quaternion.Euler(0, 180, 0);
     }
 
     public bool isStatic()
